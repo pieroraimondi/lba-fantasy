@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0f">
+<title>Calcolatore Basket</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;
+  --border:rgba(255,255,255,0.08);
+  --c1:#ff6b35;--c2:#3b82f6;--c3:#a855f7;--c4:#10b981;
+  --text:#f0f0f5;--muted:#6b6b7e;--positive:#34d399;--negative:#f87171;
+  --radius:16px;--radius-sm:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden}
+
+.app-header{position:sticky;top:0;z-index:100;background:rgba(10,10,15,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:env(safe-area-inset-top,0) 0 0;border-bottom:1px solid var(--border)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px 12px}
+.header-title{font-size:17px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap}
+.header-title span{color:var(--c1)}
+.header-right{display:flex;align-items:center;gap:8px}
+.min-pill{display:flex;align-items:center;gap:6px;background:var(--surface2);border-radius:50px;padding:6px 12px;border:1px solid var(--border)}
+.min-pill label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.min-pill input{width:36px;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Mono',monospace;font-size:15px;font-weight:500;text-align:center;padding:0}
+.reset-btn{background:transparent;border:1px solid rgba(248,113,113,0.35);border-radius:8px;color:var(--negative);font-family:'DM Mono',monospace;font-size:12px;font-weight:500;padding:6px 11px;cursor:pointer;white-space:nowrap;min-height:36px}
+.reset-btn:active{background:rgba(248,113,113,0.1)}
+.tab-bar{display:grid;grid-template-columns:1fr 1fr;padding:10px 16px;gap:8px}
+.tab-btn{padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.01em}
+.tab-btn.active{background:var(--c1);color:#fff;border-color:var(--c1)}
+
+.page{display:none;padding:16px 16px env(safe-area-inset-bottom,20px)}
+.page.active{display:block}
+
+.score-banner{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;align-items:center;justify-content:space-around;margin-bottom:16px;position:relative;overflow:hidden}
+.score-team{text-align:center;position:relative}
+.score-team-name{font-size:12px;color:var(--muted);margin-bottom:4px;letter-spacing:0.05em}
+.score-num{font-family:'DM Mono',monospace;font-size:48px;font-weight:500;line-height:1}
+.score-vsep{font-size:18px;color:var(--border);font-family:'DM Mono',monospace}
+.winner-tag{font-size:10px;font-weight:700;letter-spacing:0.1em;background:var(--positive);color:#000;padding:2px 8px;border-radius:20px;margin-top:4px;display:inline-block}
+
+.team-block{margin-bottom:20px}
+.team-header-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.team-color-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.team-name-inp{flex:1;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:'Syne',sans-serif;font-size:16px;font-weight:700;padding:4px 0;outline:none;min-width:0}
+
+/* FLAG CASA/TRASFERTA */
+.home-toggle{display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0}
+.home-btn{padding:6px 10px;font-size:11px;font-weight:700;font-family:'DM Mono',monospace;background:transparent;border:none;color:var(--muted);cursor:pointer;letter-spacing:0.04em;white-space:nowrap;min-height:36px;transition:all 0.15s}
+.home-btn.active-home{background:#fbbf24;color:#000}
+.home-btn.active-away{background:var(--surface2);color:var(--muted)}
+
+.section-tag{font-size:10px;font-weight:700;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;padding:0 4px}
+.player-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;display:grid;grid-template-columns:1fr 60px 60px 52px;gap:8px;align-items:center}
+.player-card.panchina{border-color:rgba(255,255,255,0.04);background:var(--surface2)}
+.col-hdr{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:0.05em}
+.player-inp{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:'Syne',sans-serif;font-size:17px;padding:4px 0;outline:none;width:100%}
+.num-inp{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:15px;font-weight:500;padding:8px 4px;outline:none;width:100%;text-align:center;min-height:44px}
+.player-card.panchina .num-inp{background:rgba(255,255,255,0.03)}
+.eff-display{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;text-align:right;line-height:1}
+.eff-pos{color:var(--positive)}
+.eff-neg{color:var(--negative)}
+.eff-zero{color:var(--muted)}
+
+.team-totals{border-radius:var(--radius-sm);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:4px;border:1px solid var(--border);background:var(--surface2)}
+.tot-item{text-align:center}
+.tot-val{font-family:'DM Mono',monospace;font-size:22px;font-weight:500}
+.tot-lbl{font-size:10px;color:var(--muted);letter-spacing:0.08em;margin-top:2px}
+.tot-sep{width:1px;height:32px;background:var(--border)}
+.block-sep{height:1px;background:var(--border);margin:14px 0 12px}
+
+/* PCF */
+.pcf-team-inp{width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:'Syne',sans-serif;font-size:17px;font-weight:700;padding:4px 0;outline:none}
+.pcf-summary{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:16px;text-align:center}
+.pcf-sum-val{font-family:'DM Mono',monospace;font-size:20px;font-weight:500}
+.pcf-sum-lbl{font-size:10px;color:var(--muted);letter-spacing:0.06em;margin-top:2px}
+.pcf-player-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;margin-bottom:8px}
+.pcf-player-card.panchina{background:var(--surface2);border-color:rgba(255,255,255,0.04)}
+.pcf-top-row{display:grid;grid-template-columns:1fr 60px 60px 52px;gap:8px;align-items:center}
+.tribuna-card{background:var(--surface);border-radius:var(--radius-sm);padding:11px 14px;margin-bottom:8px}
+.role-sel{background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.3);border-radius:8px;color:var(--c1);font-family:'DM Mono',monospace;font-size:12px;font-weight:500;padding:8px 4px;outline:none;min-height:44px;text-align:center}
+.avail-note{font-size:11px;color:var(--muted);text-align:right;margin-top:4px;padding-right:4px}
+
+.overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);align-items:flex-end;justify-content:center}
+.overlay.show{display:flex}
+.confirm-sheet{background:var(--surface);border-radius:20px 20px 0 0;padding:28px 24px calc(env(safe-area-inset-bottom,0px) + 28px);width:100%;border-top:1px solid var(--border)}
+.confirm-title{font-size:18px;font-weight:700;margin-bottom:8px}
+.confirm-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.5}
+.confirm-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.confirm-yes{background:var(--negative);border:none;border-radius:12px;color:#fff;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;padding:14px;cursor:pointer;min-height:50px}
+.confirm-no{background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Syne',sans-serif;font-size:15px;font-weight:600;padding:14px;cursor:pointer;min-height:50px}
+::-webkit-scrollbar{display:none}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-inner">
+    <div class="header-title">⛹ Calcola<span>tore</span></div>
+    <div class="header-right">
+      <div class="min-pill">
+        <label>MIN</label>
+        <input type="number" id="global-min" value="40" min="1" max="60" inputmode="numeric" onchange="onMinChange()">
+      </div>
+      <button class="reset-btn" onclick="showReset()">↺ Reset</button>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('fbl')">FBL — Squadre</button>
+    <button class="tab-btn" onclick="switchTab('pcf')">PCF — Formazione</button>
+  </div>
+</div>
+
+<!-- FBL -->
+<div class="page active" id="page-fbl">
+  <div class="score-banner">
+    <div class="score-team">
+      <div class="score-team-name" id="bn-n1">SQUADRA 1</div>
+      <div class="score-num" id="bn-v1" style="color:var(--c1)">0</div>
+      <div id="bn-w1"></div>
+    </div>
+    <div class="score-vsep">vs</div>
+    <div class="score-team">
+      <div class="score-team-name" id="bn-n2">SQUADRA 2</div>
+      <div class="score-num" id="bn-v2" style="color:var(--c2)">0</div>
+      <div id="bn-w2"></div>
+    </div>
+  </div>
+
+  <!-- SQ1 FBL -->
+  <div class="team-block">
+    <div class="team-header-row">
+      <div class="team-color-dot" style="background:var(--c1)"></div>
+      <input class="team-name-inp" id="sq1-name" value="Squadra 1" style="border-bottom-color:rgba(255,107,53,0.4)" oninput="calcFBL()">
+      <div class="home-toggle">
+        <button class="home-btn active-home" id="fbl-h1-casa" onclick="setFblHome(0,'casa')">🏠 Casa</button>
+        <button class="home-btn" id="fbl-h1-away" onclick="setFblHome(0,'away')">✈ Trasferta</button>
+      </div>
+    </div>
+    <div class="section-tag">Titolari</div>
+    <div class="player-card" style="background:transparent;border-color:transparent;padding:2px 14px;margin-bottom:2px">
+      <span class="col-hdr">Nome</span><span class="col-hdr" style="text-align:center">PTI</span><span class="col-hdr" style="text-align:center">MIN</span><span class="col-hdr" style="text-align:right">EFF</span>
+    </div>
+    <div id="sq1-tit-rows"></div>
+    <div class="block-sep"></div>
+    <div class="section-tag">Panchina</div>
+    <div id="sq1-pan-rows"></div>
+    <div class="team-totals" style="border-color:rgba(255,107,53,0.2)">
+      <div class="tot-item"><div class="tot-val" id="sq1-tot">0</div><div class="tot-lbl">TOTALE</div></div>
+      <div class="tot-sep"></div>
+      <div class="tot-item"><div class="tot-val" id="sq1-bonus" style="color:#fbbf24">+5</div><div class="tot-lbl" id="sq1-bonus-lbl">CASA</div></div>
+      <div class="tot-sep"></div>
+      <div class="tot-item"><div class="tot-val" id="sq1-fin" style="color:var(--c1)">5</div><div class="tot-lbl">FINALE</div></div>
+    </div>
+  </div>
+
+  <div style="height:3px;border-radius:2px;background:linear-gradient(90deg,var(--c1),var(--c2));margin:8px 0 24px;opacity:0.4"></div>
+
+  <!-- SQ2 FBL -->
+  <div class="team-block">
+    <div class="team-header-row">
+      <div class="team-color-dot" style="background:var(--c2)"></div>
+      <input class="team-name-inp" id="sq2-name" value="Squadra 2" style="border-bottom-color:rgba(59,130,246,0.4)" oninput="calcFBL()">
+      <div class="home-toggle">
+        <button class="home-btn" id="fbl-h2-casa" onclick="setFblHome(1,'casa')">🏠 Casa</button>
+        <button class="home-btn active-away" id="fbl-h2-away" onclick="setFblHome(1,'away')">✈ Trasferta</button>
+      </div>
+    </div>
+    <div class="section-tag">Titolari</div>
+    <div class="player-card" style="background:transparent;border-color:transparent;padding:2px 14px;margin-bottom:2px">
+      <span class="col-hdr">Nome</span><span class="col-hdr" style="text-align:center">PTI</span><span class="col-hdr" style="text-align:center">MIN</span><span class="col-hdr" style="text-align:right">EFF</span>
+    </div>
+    <div id="sq2-tit-rows"></div>
+    <div class="block-sep"></div>
+    <div class="section-tag">Panchina</div>
+    <div id="sq2-pan-rows"></div>
+    <div class="team-totals" style="border-color:rgba(59,130,246,0.2)">
+      <div class="tot-item"><div class="tot-val" id="sq2-tot">0</div><div class="tot-lbl">TOTALE</div></div>
+      <div class="tot-sep"></div>
+      <div class="tot-item"><div class="tot-val" id="sq2-bonus" style="color:var(--muted)">+0</div><div class="tot-lbl" id="sq2-bonus-lbl">TRASFERTA</div></div>
+      <div class="tot-sep"></div>
+      <div class="tot-item"><div class="tot-val" id="sq2-fin" style="color:var(--c2)">0</div><div class="tot-lbl">FINALE</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PCF -->
+<div class="page" id="page-pcf">
+  <div class="score-banner" style="margin-bottom:16px">
+    <div class="score-team">
+      <div class="score-team-name" id="pcf-bn-n1">SQUADRA 1</div>
+      <div class="score-num" id="pcf-bn-v1" style="color:var(--c3)">0</div>
+      <div id="pcf-bn-w1"></div>
+    </div>
+    <div class="score-vsep">vs</div>
+    <div class="score-team">
+      <div class="score-team-name" id="pcf-bn-n2">SQUADRA 2</div>
+      <div class="score-num" id="pcf-bn-v2" style="color:var(--c4)">0</div>
+      <div id="pcf-bn-w2"></div>
+    </div>
+  </div>
+
+  <!-- PCF SQ1 (viola) -->
+  <div class="team-block">
+    <div class="team-header-row">
+      <div class="team-color-dot" style="background:var(--c3)"></div>
+      <input class="pcf-team-inp" id="pcf-team1" value="" placeholder="Nome squadra 1" style="border-bottom-color:rgba(168,85,247,0.4)" oninput="calcPCF()">
+      <div class="home-toggle">
+        <button class="home-btn active-home" id="pcf-h1-casa" onclick="setPcfHome(0,'casa')">🏠 Casa</button>
+        <button class="home-btn" id="pcf-h1-away" onclick="setPcfHome(0,'away')">✈ Trasferta</button>
+      </div>
+    </div>
+    <div class="pcf-summary" style="border-color:rgba(168,85,247,0.2)">
+      <div><div class="pcf-sum-val" id="p1-tit-sum">0</div><div class="pcf-sum-lbl">TITOLARI</div></div>
+      <div><div class="pcf-sum-val" id="p1-pan-sum">0</div><div class="pcf-sum-lbl">PANCHINA</div></div>
+      <div><div class="pcf-sum-val" id="p1-grand" style="color:var(--c3)">0</div><div class="pcf-sum-lbl">TOTALE</div></div>
+      <div><div class="pcf-sum-val" id="p1-casa" style="color:var(--positive)">3</div><div class="pcf-sum-lbl" id="p1-casa-lbl">IN CASA</div></div>
+    </div>
+    <div class="section-tag">Titolari</div>
+    <div class="player-card" style="background:transparent;border-color:transparent;padding:2px 14px;margin-bottom:2px">
+      <span class="col-hdr">Nome</span><span class="col-hdr" style="text-align:center">PTI</span><span class="col-hdr" style="text-align:center">MIN</span><span class="col-hdr" style="text-align:right">EFF</span>
+    </div>
+    <div id="p1-tit-rows"></div>
+    <div class="block-sep"></div>
+    <div class="section-tag">Panchina</div>
+    <div id="p1-pan-rows"></div>
+    <div class="block-sep"></div>
+    <div class="section-tag" style="color:var(--c3)">Tribuna</div>
+    <div id="p1-trib-rows"></div>
+  </div>
+
+  <div style="height:3px;border-radius:2px;background:linear-gradient(90deg,var(--c3),var(--c4));margin:8px 0 24px;opacity:0.4"></div>
+
+  <!-- PCF SQ2 (verde) -->
+  <div class="team-block">
+    <div class="team-header-row">
+      <div class="team-color-dot" style="background:var(--c4)"></div>
+      <input class="pcf-team-inp" id="pcf-team2" value="" placeholder="Nome squadra 2" style="border-bottom-color:rgba(16,185,129,0.4)" oninput="calcPCF()">
+      <div class="home-toggle">
+        <button class="home-btn" id="pcf-h2-casa" onclick="setPcfHome(1,'casa')">🏠 Casa</button>
+        <button class="home-btn active-away" id="pcf-h2-away" onclick="setPcfHome(1,'away')">✈ Trasferta</button>
+      </div>
+    </div>
+    <div class="pcf-summary" style="border-color:rgba(16,185,129,0.2)">
+      <div><div class="pcf-sum-val" id="p2-tit-sum">0</div><div class="pcf-sum-lbl">TITOLARI</div></div>
+      <div><div class="pcf-sum-val" id="p2-pan-sum">0</div><div class="pcf-sum-lbl">PANCHINA</div></div>
+      <div><div class="pcf-sum-val" id="p2-grand" style="color:var(--c4)">0</div><div class="pcf-sum-lbl">TOTALE</div></div>
+      <div><div class="pcf-sum-val" id="p2-casa" style="color:var(--muted)">0</div><div class="pcf-sum-lbl" id="p2-casa-lbl">TRASFERTA</div></div>
+    </div>
+    <div class="section-tag">Titolari</div>
+    <div class="player-card" style="background:transparent;border-color:transparent;padding:2px 14px;margin-bottom:2px">
+      <span class="col-hdr">Nome</span><span class="col-hdr" style="text-align:center">PTI</span><span class="col-hdr" style="text-align:center">MIN</span><span class="col-hdr" style="text-align:right">EFF</span>
+    </div>
+    <div id="p2-tit-rows"></div>
+    <div class="block-sep"></div>
+    <div class="section-tag">Panchina</div>
+    <div id="p2-pan-rows"></div>
+    <div class="block-sep"></div>
+    <div class="section-tag" style="color:var(--c4)">Tribuna</div>
+    <div id="p2-trib-rows"></div>
+  </div>
+</div>
+
+<!-- RESET OVERLAY -->
+<div class="overlay" id="reset-overlay" onclick="hideReset()">
+  <div class="confirm-sheet" onclick="event.stopPropagation()">
+    <div class="confirm-title">Svuotare tutti i campi?</div>
+    <div class="confirm-sub">Tutti i nomi, minuti e punteggi verranno cancellati. L'operazione non è reversibile.</div>
+    <div class="confirm-btns">
+      <button class="confirm-yes" onclick="doReset()">Sì, svuota</button>
+      <button class="confirm-no" onclick="hideReset()">Annulla</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var ROLES=['PM','G','AP','AG','C','P/G','G/AP','AP/AG','AG/C'];
+var POS_KEYS=['PM','G','AP','AG','C','PM/G','G/AP','AP/AG','AG/C'];
+var SAVE_KEY='calcBasket_v3';
+var gm=40;
+
+// home flags: true=casa, false=trasferta/neutro
+var fblHome=[true,false];
+var pcfHome=[true,false];
+
+function mkSq(name){
+  return {name:name,tit:[{n:'',p:0,m:0},{n:'',p:0,m:0},{n:'',p:0,m:0},{n:'',p:0,m:0},{n:'',p:0,m:0}],pan:[{n:'',p:0,m:0},{n:'',p:0,m:0},{n:'',p:0,m:0},{n:'',p:0,m:0},{n:'',p:0,m:0}]};
+}
+function mkPCFTeam(){
+  return {
+    tit:[{n:'',m:0,p:0},{n:'',m:0,p:0},{n:'',m:0,p:0},{n:'',m:0,p:0},{n:'',m:0,p:0}],
+    pan:[{n:'',m:0,p:0},{n:'',m:0,p:0},{n:'',m:0,p:0},{n:'',m:0,p:0},{n:'',m:0,p:0}],
+    trib:[{role:'PM',n:'',m:0,p:0},{role:'G',n:'',m:0,p:0},{role:'AP',n:'',m:0,p:0}]
+  };
+}
+
+var sq=[mkSq('Squadra 1'),mkSq('Squadra 2')];
+var pcfTeams=[mkPCFTeam(),mkPCFTeam()];
+
+/* ---- HOME TOGGLE ---- */
+function setFblHome(idx,val){
+  fblHome[idx]=(val==='casa');
+  renderFblHomeBtn(idx);
+  calcFBL();
+}
+function setPcfHome(idx,val){
+  pcfHome[idx]=(val==='casa');
+  renderPcfHomeBtn(idx);
+  calcPCF();
+}
+
+function renderFblHomeBtn(idx){
+  var n=idx+1;
+  var isHome=fblHome[idx];
+  var bc=document.getElementById('fbl-h'+n+'-casa');
+  var ba=document.getElementById('fbl-h'+n+'-away');
+  bc.className='home-btn'+(isHome?' active-home':'');
+  ba.className='home-btn'+(!isHome?' active-away':'');
+}
+function renderPcfHomeBtn(idx){
+  var n=idx+1;
+  var isHome=pcfHome[idx];
+  var bc=document.getElementById('pcf-h'+n+'-casa');
+  var ba=document.getElementById('pcf-h'+n+'-away');
+  bc.className='home-btn'+(isHome?' active-home':'');
+  ba.className='home-btn'+(!isHome?' active-away':'');
+}
+
+/* ---- SALVATAGGIO ---- */
+function saveData(){
+  try{
+    localStorage.setItem(SAVE_KEY,JSON.stringify({
+      gm:gm,
+      sq1name:document.getElementById('sq1-name').value,
+      sq2name:document.getElementById('sq2-name').value,
+      pcft1:document.getElementById('pcf-team1').value,
+      pcft2:document.getElementById('pcf-team2').value,
+      fblHome:fblHome,pcfHome:pcfHome,
+      sq:sq,pcfTeams:pcfTeams
+    }));
+  }catch(e){}
+}
+function loadData(){
+  try{
+    var raw=localStorage.getItem(SAVE_KEY);
+    if(!raw) return;
+    var d=JSON.parse(raw);
+    if(d.gm){gm=d.gm;document.getElementById('global-min').value=gm;}
+    if(d.sq1name) document.getElementById('sq1-name').value=d.sq1name;
+    if(d.sq2name) document.getElementById('sq2-name').value=d.sq2name;
+    if(d.pcft1) document.getElementById('pcf-team1').value=d.pcft1;
+    if(d.pcft2) document.getElementById('pcf-team2').value=d.pcft2;
+    if(d.fblHome) fblHome=d.fblHome;
+    if(d.pcfHome) pcfHome=d.pcfHome;
+    if(d.sq) sq=d.sq;
+    if(d.pcfTeams) pcfTeams=d.pcfTeams;
+    renderFblHomeBtn(0);renderFblHomeBtn(1);
+    renderPcfHomeBtn(0);renderPcfHomeBtn(1);
+  }catch(e){}
+}
+
+/* ---- RESET ---- */
+function showReset(){document.getElementById('reset-overlay').classList.add('show');}
+function hideReset(){document.getElementById('reset-overlay').classList.remove('show');}
+function doReset(){
+  gm=40;fblHome=[true,false];pcfHome=[true,false];
+  document.getElementById('global-min').value=40;
+  document.getElementById('sq1-name').value='Squadra 1';
+  document.getElementById('sq2-name').value='Squadra 2';
+  document.getElementById('pcf-team1').value='';
+  document.getElementById('pcf-team2').value='';
+  sq=[mkSq('Squadra 1'),mkSq('Squadra 2')];
+  pcfTeams=[mkPCFTeam(),mkPCFTeam()];
+  renderFblHomeBtn(0);renderFblHomeBtn(1);
+  renderPcfHomeBtn(0);renderPcfHomeBtn(1);
+  try{localStorage.removeItem(SAVE_KEY);}catch(e){}
+  hideReset();calcFBL();calcPCF();
+}
+
+function onMinChange(){gm=parseFloat(document.getElementById('global-min').value)||40;calcFBL();calcPCF();saveData();}
+function switchTab(t){
+  document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',(i===0&&t==='fbl')||(i===1&&t==='pcf'));});
+  document.getElementById('page-fbl').classList.toggle('active',t==='fbl');
+  document.getElementById('page-pcf').classList.toggle('active',t==='pcf');
+  window.scrollTo(0,0);
+}
+
+function effClass(v){return v>0?'eff-pos':v<0?'eff-neg':'eff-zero';}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+
+/* ---- FBL FORMULE ---- */
+function fblTitEff(p,m){return m<=0?0:m<=gm?p:Math.trunc(p/m*gm);}
+function fblTitMin3(m){return m<=gm?m:gm;}
+function fblPanEff(p,m,t3){var p2=m<=gm?p:Math.trunc(p/m*gm);var m3=m<=gm?m:gm;var X=gm-t3;if(m3===0)return 0;if(m3<X)return p2;return Math.floor(p2/m3*X);}
+
+function buildFBLRows(si){
+  var s=sq[si];var id='sq'+(si+1);
+  ['tit','pan'].forEach(function(sec){
+    var c=document.getElementById(id+'-'+sec+'-rows');
+    c.innerHTML=s[sec].map(function(pl,i){
+      var isPan=sec==='pan';
+      var eff=isPan?fblPanEff(pl.p,pl.m,fblTitMin3(s.tit[i]?s.tit[i].m||0:0)):fblTitEff(pl.p,pl.m);
+      return '<div class="player-card'+(isPan?' panchina':'')+'">'+
+        '<input class="player-inp" type="text" value="'+esc(pl.n)+'" placeholder="Giocatore '+(i+1)+'" onchange="sq['+si+'].'+sec+'['+i+'].n=this.value;saveData()">'+
+        '<input class="num-inp" type="number" inputmode="decimal" value="'+(pl.p!==0?pl.p:'')+'" placeholder="0" onchange="sq['+si+'].'+sec+'['+i+'].p=parseFloat(this.value)||0;calcFBL()">'+
+        '<input class="num-inp" type="number" inputmode="numeric" min="0" value="'+(pl.m||'')+'" placeholder="0" onchange="sq['+si+'].'+sec+'['+i+'].m=parseFloat(this.value)||0;calcFBL()">'+
+        '<div class="eff-display '+effClass(eff)+'">'+eff+'</div></div>';
+    }).join('');
+  });
+}
+
+function calcFBL(){
+  gm=parseFloat(document.getElementById('global-min').value)||40;
+  var fins=[];
+  [0,1].forEach(function(si){
+    buildFBLRows(si);
+    var s=sq[si];var tot=0;
+    s.tit.forEach(function(pl){tot+=fblTitEff(pl.p,pl.m);});
+    s.pan.forEach(function(pl,i){tot+=fblPanEff(pl.p,pl.m,fblTitMin3(s.tit[i]?s.tit[i].m||0:0));});
+    var bonus=fblHome[si]?5:0;
+    var fin=tot+bonus;
+    fins.push(fin);
+    document.getElementById('sq'+(si+1)+'-tot').textContent=tot;
+    document.getElementById('sq'+(si+1)+'-fin').textContent=fin;
+    var bEl=document.getElementById('sq'+(si+1)+'-bonus');
+    var bLbl=document.getElementById('sq'+(si+1)+'-bonus-lbl');
+    if(fblHome[si]){bEl.textContent='+5';bEl.style.color='#fbbf24';bLbl.textContent='CASA';}
+    else{bEl.textContent='+0';bEl.style.color='var(--muted)';bLbl.textContent='TRASFERTA';}
+  });
+  var n1=document.getElementById('sq1-name').value||'Squadra 1';
+  var n2=document.getElementById('sq2-name').value||'Squadra 2';
+  document.getElementById('bn-n1').textContent=n1.toUpperCase();
+  document.getElementById('bn-n2').textContent=n2.toUpperCase();
+  document.getElementById('bn-v1').textContent=fins[0];
+  document.getElementById('bn-v2').textContent=fins[1];
+  document.getElementById('bn-w1').innerHTML=fins[0]>fins[1]?'<div class="winner-tag">VINCE</div>':'';
+  document.getElementById('bn-w2').innerHTML=fins[1]>fins[0]?'<div class="winner-tag">VINCE</div>':'';
+  saveData();
+}
+
+/* ---- PCF FORMULE ---- */
+function pcfTitEff(p,m){return m<=0?(p||0):m>gm?Math.floor(p/m*gm):p;}
+function pcfPanEff(p,m,titM){var av=Math.max(0,gm-(titM||0));return m<=0?0:m>av?Math.floor(p/m*av):p;}
+
+function getBaseAvail(posKey,titMins,panMins){
+  var single={PM:0,G:1,AP:2,AG:3,C:4};
+  if(posKey in single){var i=single[posKey];return Math.max(0,gm-(Math.min(gm,titMins[i]||0)+Math.min(gm,panMins[i]||0)));}
+  var combos={'P/G':[0,1],'PM/G':[0,1],'G/AP':[1,2],'AP/AG':[2,3],'AG/C':[3,4]};
+  if(posKey in combos){var ab=combos[posKey];var keys=Object.keys(single);return getBaseAvail(keys[ab[0]],titMins,panMins)+getBaseAvail(keys[ab[1]],titMins,panMins);}
+  return 0;
+}
+function tribMatchesRow(tr,rk){
+  var map={'PM':['PM/G','G','PM'],'G':['PM/G','G/AP','G'],'AP':['G/AP','AP/AG','AP'],'AG':['AP/AG','AG/C','AG'],'C':['AG/C','C',''],'P/G':['PM/G','G',''],'PM/G':['PM/G','G',''],'G/AP':['G/AP','AP/AG','AP'],'AP/AG':['AP/AG','AG/C','AG'],'AG/C':['AG/C','C','']};
+  return (map[rk]||[]).indexOf(tr)>=0;
+}
+function calcTribResults(titMins,panMins,tribs){
+  var fCol={};POS_KEYS.forEach(function(k){fCol[k]=getBaseAvail(k,titMins,panMins);});
+  var cols=[fCol];var cur=Object.assign({},fCol);
+  tribs.forEach(function(tr){var next=Object.assign({},cur);POS_KEYS.forEach(function(k){if(tribMatchesRow(tr.role,k))next[k]=Math.max(0,cur[k]-tr.m);});cols.push(next);cur=next;});
+  return tribs.map(function(tr,i){var avail=cols[i][tr.role]||0;var eff=tr.m>0?(tr.m>avail?Math.floor(tr.p/tr.m*avail):tr.p):0;return {avail:avail,eff:eff};});
+}
+
+function buildPCFTeam(ti){
+  var pfx='p'+(ti+1);
+  var team=pcfTeams[ti];
+  var titMins=team.tit.map(function(p){return p.m||0;});
+  var panMins=team.pan.map(function(p){return p.m||0;});
+  var tc=ti===0?'var(--c3)':'var(--c4)';
+  var tb=ti===0?'rgba(168,85,247,0.25)':'rgba(16,185,129,0.25)';
+
+  // titolari
+  document.getElementById(pfx+'-tit-rows').innerHTML=team.tit.map(function(pl,i){
+    var eff=pcfTitEff(pl.p,pl.m);
+    return '<div class="pcf-player-card"><div class="pcf-top-row">'+
+      '<input class="player-inp" type="text" value="'+esc(pl.n)+'" placeholder="Titolare '+(i+1)+'" onchange="pcfTeams['+ti+'].tit['+i+'].n=this.value;saveData()">'+
+      '<input class="num-inp" type="number" inputmode="decimal" value="'+(pl.p!==0?pl.p:'')+'" placeholder="0" onchange="pcfTeams['+ti+'].tit['+i+'].p=parseFloat(this.value)||0;calcPCF()">'+
+      '<input class="num-inp" type="number" inputmode="numeric" min="0" value="'+(pl.m||'')+'" placeholder="0" onchange="pcfTeams['+ti+'].tit['+i+'].m=parseFloat(this.value)||0;calcPCF()">'+
+      '<div class="eff-display '+effClass(eff)+'">'+eff+'</div></div></div>';
+  }).join('');
+
+  // panchina
+  document.getElementById(pfx+'-pan-rows').innerHTML=team.pan.map(function(pl,i){
+    var eff=pcfPanEff(pl.p,pl.m,titMins[i]||0);
+    var av=Math.max(0,gm-(titMins[i]||0));
+    return '<div class="pcf-player-card panchina"><div class="pcf-top-row">'+
+      '<input class="player-inp" type="text" value="'+esc(pl.n)+'" placeholder="Panchina '+(i+1)+'" onchange="pcfTeams['+ti+'].pan['+i+'].n=this.value;saveData()">'+
+      '<input class="num-inp" type="number" inputmode="decimal" value="'+(pl.p!==0?pl.p:'')+'" placeholder="0" onchange="pcfTeams['+ti+'].pan['+i+'].p=parseFloat(this.value)||0;calcPCF()">'+
+      '<input class="num-inp" type="number" inputmode="numeric" min="0" value="'+(pl.m||'')+'" placeholder="0" onchange="pcfTeams['+ti+'].pan['+i+'].m=parseFloat(this.value)||0;calcPCF()">'+
+      '<div class="eff-display '+effClass(eff)+'">'+eff+'</div></div>'+
+      '<div class="avail-note">disp: '+av+' min</div></div>';
+  }).join('');
+
+  // tribuna
+  var tribRes=calcTribResults(titMins,panMins,team.trib);
+  document.getElementById(pfx+'-trib-rows').innerHTML=team.trib.map(function(tr,i){
+    var res=tribRes[i]||{avail:0,eff:0};
+    return '<div class="tribuna-card" style="border:1px solid '+tb+'">'+
+      '<div class="pcf-top-row" style="grid-template-columns:auto 1fr 60px 60px 52px">'+
+        '<select class="role-sel" style="color:'+tc+';border-color:'+tb+'" onchange="pcfTeams['+ti+'].trib['+i+'].role=this.value;calcPCF()">'+
+          ROLES.map(function(r){return '<option value="'+r+'"'+(r===tr.role?' selected':'')+'>'+r+'</option>';}).join('')+
+        '</select>'+
+        '<input class="player-inp" type="text" value="'+esc(tr.n)+'" placeholder="Nome" onchange="pcfTeams['+ti+'].trib['+i+'].n=this.value;saveData()" style="border-bottom-color:'+tb+'">'+
+        '<input class="num-inp" type="number" inputmode="decimal" value="'+(tr.p!==0?tr.p:'')+'" placeholder="0" onchange="pcfTeams['+ti+'].trib['+i+'].p=parseFloat(this.value)||0;calcPCF()">'+
+        '<input class="num-inp" type="number" inputmode="numeric" min="0" value="'+(tr.m||'')+'" placeholder="0" onchange="pcfTeams['+ti+'].trib['+i+'].m=parseFloat(this.value)||0;calcPCF()">'+
+        '<div class="eff-display '+effClass(res.eff)+'">'+res.eff+'</div>'+
+      '</div>'+
+      '<div class="avail-note">disp: '+res.avail+' min</div></div>';
+  }).join('');
+
+  // totali
+  var titTot=0,panTot=0;
+  team.tit.forEach(function(pl){titTot+=pcfTitEff(pl.p,pl.m);});
+  team.pan.forEach(function(pl,i){panTot+=pcfPanEff(pl.p,pl.m,titMins[i]||0);});
+  panTot+=tribRes.reduce(function(s,r){return s+r.eff;},0);
+  var grand=titTot+panTot;
+  var bonus=pcfHome[ti]?3:0;
+  var finale=grand+bonus;
+  document.getElementById(pfx+'-tit-sum').textContent=titTot;
+  document.getElementById(pfx+'-pan-sum').textContent=panTot;
+  document.getElementById(pfx+'-grand').textContent=grand;
+  var casaEl=document.getElementById(pfx+'-casa');
+  var casaLbl=document.getElementById(pfx+'-casa-lbl');
+  if(pcfHome[ti]){casaEl.textContent=finale;casaEl.style.color='var(--positive)';casaLbl.textContent='IN CASA';}
+  else{casaEl.textContent=grand;casaEl.style.color='var(--muted)';casaLbl.textContent='TRASFERTA';}
+  return finale;
+}
+
+function calcPCF(){
+  gm=parseFloat(document.getElementById('global-min').value)||40;
+  var v1=buildPCFTeam(0);
+  var v2=buildPCFTeam(1);
+  var n1=document.getElementById('pcf-team1').value||'Squadra 1';
+  var n2=document.getElementById('pcf-team2').value||'Squadra 2';
+  document.getElementById('pcf-bn-n1').textContent=n1.toUpperCase();
+  document.getElementById('pcf-bn-n2').textContent=n2.toUpperCase();
+  document.getElementById('pcf-bn-v1').textContent=v1;
+  document.getElementById('pcf-bn-v2').textContent=v2;
+  document.getElementById('pcf-bn-w1').innerHTML=v1>v2?'<div class="winner-tag">VINCE</div>':'';
+  document.getElementById('pcf-bn-w2').innerHTML=v2>v1?'<div class="winner-tag">VINCE</div>':'';
+  saveData();
+}
+
+loadData();
+calcFBL();
+calcPCF();
+</script>
+</body>
+</html>
