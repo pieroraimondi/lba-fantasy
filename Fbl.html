@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0f">
+<title>Calcolatore Basket</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c26;--border:rgba(255,255,255,0.08);--accent:#ff6b35;--accent2:#3b82f6;--text:#f0f0f5;--muted:#6b6b7e;--positive:#34d399;--negative:#f87171;--radius:16px;--radius-sm:10px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden}
+.app-header{position:sticky;top:0;z-index:100;background:rgba(10,10,15,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:env(safe-area-inset-top,0) 0 0;border-bottom:1px solid var(--border)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px 12px}
+.header-title{font-size:17px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap}
+.header-title span{color:var(--accent)}
+.header-right{display:flex;align-items:center;gap:8px}
+.min-pill{display:flex;align-items:center;gap:6px;background:var(--surface2);border-radius:50px;padding:6px 12px;border:1px solid var(--border)}
+.min-pill label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.min-pill input{width:36px;background:transparent;border:none;outline:none;color:var(--text);font-family:'DM Mono',monospace;font-size:15px;font-weight:500;text-align:center;padding:0}
+.reset-btn{background:transparent;border:1px solid rgba(248,113,113,0.35);border-radius:8px;color:var(--negative);font-family:'DM Mono',monospace;font-size:12px;font-weight:500;padding:6px 11px;cursor:pointer;white-space:nowrap;min-height:36px}
+.reset-btn:active{background:rgba(248,113,113,0.1)}
+.tab-bar{display:grid;grid-template-columns:1fr 1fr;padding:10px 16px;gap:8px}
+.tab-btn{padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.01em}
+.tab-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.page{display:none;padding:16px 16px env(safe-area-inset-bottom,20px)}
+.page.active{display:block}
+.score-banner{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;align-items:center;justify-content:space-around;margin-bottom:16px;position:relative;overflow:hidden}
+.score-banner::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,107,53,0.06) 0%,rgba(59,130,246,0.06) 100%)}
+.score-team{text-align:center;position:relative}
+.score-team-name{font-size:12px;color:var(--muted);margin-bottom:4px;letter-spacing:0.05em}
+.score-num{font-family:'DM Mono',monospace;font-size:52px;font-weight:500;line-height:1}
+.score-num.s1{color:var(--accent)}
+.score-num.s2{color:var(--accent2)}
+.score-vsep{font-size:20px;color:var(--border);font-family:'DM Mono',monospace}
+.winner-tag{font-size:10px;font-weight:700;letter-spacing:0.1em;background:var(--positive);color:#000;padding:2px 8px;border-radius:20px;margin-top:4px;display:inline-block}
+.team-block{margin-bottom:16px}
+.team-header-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.team-color-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.team-name-inp{flex:1;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:'Syne',sans-serif;font-size:16px;font-weight:700;padding:4px 0;outline:none}
+.section-tag{font-size:10px;font-weight:700;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;padding:0 4px}
+.player-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;display:grid;grid-template-columns:1fr 64px 64px 56px;gap:8px;align-items:center}
+.player-card.panchina{border-color:rgba(255,255,255,0.04);background:var(--surface2)}
+.col-hdr{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:0.05em}
+.player-inp{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:'Syne',sans-serif;font-size:17px;padding:4px 0;outline:none;width:100%}
+.num-inp{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:15px;font-weight:500;padding:8px 4px;outline:none;width:100%;text-align:center;min-height:44px}
+.player-card.panchina .num-inp{background:rgba(255,255,255,0.03)}
+.eff-display{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;text-align:right;line-height:1}
+.eff-pos{color:var(--positive)}
+.eff-neg{color:var(--negative)}
+.eff-zero{color:var(--muted)}
+.team-totals{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.tot-item{text-align:center}
+.tot-val{font-family:'DM Mono',monospace;font-size:22px;font-weight:500}
+.tot-lbl{font-size:10px;color:var(--muted);letter-spacing:0.08em;margin-top:2px}
+.tot-sep{width:1px;height:32px;background:var(--border)}
+.block-sep{height:1px;background:var(--border);margin:14px 0 12px}
+.pcf-team-inp{width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:'Syne',sans-serif;font-size:17px;font-weight:700;padding:8px 0;outline:none;margin-bottom:16px}
+.pcf-summary{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:16px;text-align:center}
+.pcf-sum-val{font-family:'DM Mono',monospace;font-size:22px;font-weight:500}
+.pcf-sum-lbl{font-size:10px;color:var(--muted);letter-spacing:0.06em;margin-top:3px}
+.pcf-player-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px}
+.pcf-player-card.panchina{background:var(--surface2);border-color:rgba(255,255,255,0.04)}
+.pcf-row1{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-bottom:10px}
+.pcf-row2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center}
+.pcf-eff-badge{font-family:'DM Mono',monospace;font-size:20px;font-weight:500;text-align:right}
+.num-inp-sm{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:14px;font-weight:500;padding:8px 6px;outline:none;width:100%;text-align:center;min-height:44px}
+.inp-label{font-size:10px;color:var(--muted);letter-spacing:0.06em;text-align:center;margin-bottom:4px}
+.tribuna-card{background:var(--surface);border:1px solid rgba(255,107,53,0.2);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px}
+.trib-row1{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;margin-bottom:10px}
+.trib-row2{display:grid;grid-template-columns:1fr 1fr 70px;gap:8px;align-items:center}
+.role-sel{background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.3);border-radius:8px;color:var(--accent);font-family:'DM Mono',monospace;font-size:12px;font-weight:500;padding:8px 6px;outline:none;min-height:44px;text-align:center}
+.avail-badge{background:rgba(255,255,255,0.05);border-radius:8px;padding:8px 6px;text-align:center}
+.avail-val{font-family:'DM Mono',monospace;font-size:14px;color:var(--muted)}
+.overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);align-items:flex-end;justify-content:center}
+.overlay.show{display:flex}
+.confirm-sheet{background:var(--surface);border-radius:20px 20px 0 0;padding:28px 24px calc(env(safe-area-inset-bottom,0px) + 28px);width:100%;border-top:1px solid var(--border)}
+.confirm-title{font-size:18px;font-weight:700;margin-bottom:8px}
+.confirm-sub{font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.5}
+.confirm-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.confirm-yes{background:var(--negative);border:none;border-radius:12px;color:#fff;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;padding:14px;cursor:pointer;min-height:50px}
+.confirm-no{background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Syne',sans-serif;font-size:15px;font-weight:600;padding:14px;cursor:pointer;min-height:50px}
+::-webkit-scrollbar{display:none}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-inner">
+    <div class="header-title">⛹ Calcola<span>tore</span></div>
+    <div class="header-right">
+      <div class="min-pill">
+        <label>MIN</label>
+        <input type="number" id="global-min" value="40" min="1" max="60" inputmode="numeric" onchange="onMinChange()">
+      </div>
+      <button class="reset-btn" onclick="showReset()">↺ Reset</button>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('fbl')">FBL — Squadre</button>
+    <button class="tab-btn" onclick="switchTab('pcf')">PCF — Formazione</button>
+  </div>
+</div>
+
+<div class="page active" id="page-fbl">
+  <div class="score-banner">
+    <div class="score-team">
+      <div class="score-team-name" id="bn-n1">SQUADRA 1</div>
+      <div class="score-num s1" id="bn-v1">5</div>
+      <div id="bn-w1"></div>
+    </div>
+    <div class="score-vsep">vs</div>
+    <div class="score-team">
+      <div class="score-team-name" id="bn-n2">SQUADRA 2</div>
+      <div class="score-num s2" id="bn-v2">5</div>
+      <div id="bn-w2"></div>
+    </div>
+  </div>
+
+  <div class="team-block">
+    <div class="team-header-row">
+      <div class="team-color-dot" style="background:var(--accent)"></div>
+      <input class="team-name-inp" id="sq1-name" value="Squadra 1" oninput="calcFBL()">
+    </div>
+    <div class="section-tag">Titolari</div>
+    <div class="player-card" style="background:transparent;border-color:transparent;padding:4px 14px;margin-bottom:2px">
+      <span class="col-hdr">Nome</span><span class="col-hdr" style="text-align:center">PTI</span><span class="col-hdr" style="text-align:center">MIN</span><span class="col-hdr" style="text-align:right">EFF</span>
+    </div>
+    <div id="sq1-tit-rows"></div>
+    <div class="block-sep"></div>
+    <div class="section-tag">Panchina</div>
+    <div id="sq1-pan-rows"></div>
+    <div class="team-totals">
+      <div class="tot-item"><div class="tot-val" id="sq1-tot">0</div><div class="tot-lbl">TOTALE</div></div>
+      <div class="tot-sep"></div>
+      <div class="tot-item"><div class="tot-val" style="color:var(--muted)">+5</div><div class="tot-lbl">CASA</div></div>
+      <div class="tot-sep"></div>
+      <div class="tot-item"><div class="tot-val" id="sq1-fin" style="color:var(--accent)">5</div><div class="tot-lbl">FINALE</div></div>
+    </div>
+  </div>
+
+  <div class="team-block" style="margin-top:24px">
+    <div class="team-header-row">
+      <div class="team-color-dot" style="background:var(--accent2)"></div>
+      <input class="team-name-inp" id="sq2-name" value="Squadra 2" oninput="calcFBL()">
+    </div>
+    <div class="section-tag">Titolari</div>
+    <div class="player-card" style="background:transparent;border-color:transparent;padding:4px 14px;margin-bottom:2px">
+      <span class="col-hdr">Nome</span><span class="col-hdr" style="text-align:center">PTI</span><span class="col-hdr" style="text-align:center">MIN</span><span class="col-hdr" style="text-align:right">EFF</span>
+    </div>
+    <div id="sq2-tit-rows"></div>
+    <div class="block-sep"></div>
+    <div class="section-tag">Panchina</div>
+    <div id="sq2-pan-rows"></div>
+    <div class="team-totals" style="border-color:rgba(59,130,246,0.2)">
+      <div class="tot-item"><div class="tot-val" id="sq2-tot">0</div><div class="tot-lbl">TOTALE</div></div>
+      <div class="tot-sep"></div>
+      <div class="tot-item"><div class="tot-val" style="color:var(--muted)">+5</div><div class="tot-lbl">CASA</div></div>
+      <div class="tot-sep"></div>
+      <div class="tot-item"><div class="tot-val" id="sq2-fin" style="color:var(--accent2)">5</div><div class="tot-lbl">FINALE</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-pcf">
+  <input class="pcf-team-inp" id="pcf-team" value="" placeholder="Nome squadra" oninput="saveData()">
+  <div class="pcf-summary">
+    <div><div class="pcf-sum-val" id="pcf-tit-sum">0</div><div class="pcf-sum-lbl">TITOLARI</div></div>
+    <div><div class="pcf-sum-val" id="pcf-pan-sum">0</div><div class="pcf-sum-lbl">PANCHINA</div></div>
+    <div><div class="pcf-sum-val" id="pcf-grand" style="color:var(--accent)">0</div><div class="pcf-sum-lbl">TOTALE</div></div>
+    <div><div class="pcf-sum-val" id="pcf-casa" style="color:var(--positive)">3</div><div class="pcf-sum-lbl">IN CASA</div></div>
+  </div>
+  <div class="section-tag">Titolari</div>
+  <div id="pcf-tit-rows"></div>
+  <div class="block-sep"></div>
+  <div class="section-tag">Panchina</div>
+  <div id="pcf-pan-rows"></div>
+  <div class="block-sep"></div>
+  <div class="section-tag" style="color:var(--accent)">Tribuna</div>
+  <div id="pcf-trib-rows"></div>
+</div>
+
+<div class="overlay" id="reset-overlay" onclick="hideReset()">
+  <div class="confirm-sheet" onclick="event.stopPropagation()">
+    <div class="confirm-title">Svuotare tutti i campi?</div>
+    <div class="confirm-sub">Tutti i nomi, minuti e punteggi verranno cancellati. L'operazione non è reversibile.</div>
+    <div class="confirm-btns">
+      <button class="confirm-yes" onclick="doReset()">Sì, svuota</button>
+      <button class="confirm-no" onclick="hideReset()">Annulla</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ROLES=['PM','G','AP','AG','C','P/G','G/AP','AP/AG','AG/C'];
+const POS_KEYS=['PM','G','AP','AG','C','PM/G','G/AP','AP/AG','AG/C'];
+const SAVE_KEY='calcBasket_v1';
+let gm=40;
+
+function mkSq(name){
+  return {name:name,tit:[{n:'',p:0,m:0},{n:'',p:0,m:0},{n:'',p:0,m:0},{n:'',p:0,m:0},{n:'',p:0,m:0}],pan:[{n:'',p:0,m:0},{n:'',p:0,m:0},{n:'',p:0,m:0},{n:'',p:0,m:0},{n:'',p:0,m:0}]};
+}
+function mkPCF(){
+  return {
+    tit:[{n:'',m:0,p:0},{n:'',m:0,p:0},{n:'',m:0,p:0},{n:'',m:0,p:0},{n:'',m:0,p:0}],
+    pan:[{n:'',m:0,p:0},{n:'',m:0,p:0},{n:'',m:0,p:0},{n:'',m:0,p:0},{n:'',m:0,p:0}],
+    trib:[{role:'PM',n:'',m:0,p:0},{role:'G',n:'',m:0,p:0},{role:'AP',n:'',m:0,p:0}]
+  };
+}
+
+let sq=[mkSq('Squadra 1'),mkSq('Squadra 2')];
+let pcf=mkPCF();
+
+function saveData(){
+  try{
+    localStorage.setItem(SAVE_KEY,JSON.stringify({
+      gm:gm,
+      sq1name:document.getElementById('sq1-name').value,
+      sq2name:document.getElementById('sq2-name').value,
+      pcfteam:document.getElementById('pcf-team').value,
+      sq:sq,pcf:pcf
+    }));
+  }catch(e){}
+}
+
+function loadData(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);
+    if(!raw) return;
+    const d=JSON.parse(raw);
+    if(d.gm){gm=d.gm;document.getElementById('global-min').value=gm;}
+    if(d.sq1name) document.getElementById('sq1-name').value=d.sq1name;
+    if(d.sq2name) document.getElementById('sq2-name').value=d.sq2name;
+    if(d.pcfteam) document.getElementById('pcf-team').value=d.pcfteam;
+    if(d.sq) sq=d.sq;
+    if(d.pcf) pcf=d.pcf;
+  }catch(e){}
+}
+
+function showReset(){document.getElementById('reset-overlay').classList.add('show');}
+function hideReset(){document.getElementById('reset-overlay').classList.remove('show');}
+function doReset(){
+  gm=40;
+  document.getElementById('global-min').value=40;
+  document.getElementById('sq1-name').value='Squadra 1';
+  document.getElementById('sq2-name').value='Squadra 2';
+  document.getElementById('pcf-team').value='';
+  sq=[mkSq('Squadra 1'),mkSq('Squadra 2')];
+  pcf=mkPCF();
+  try{localStorage.removeItem(SAVE_KEY);}catch(e){}
+  hideReset();
+  calcFBL();
+  calcPCF();
+}
+
+function onMinChange(){
+  gm=parseFloat(document.getElementById('global-min').value)||40;
+  calcFBL();calcPCF();saveData();
+}
+
+function switchTab(t){
+  document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',(i===0&&t==='fbl')||(i===1&&t==='pcf'));});
+  document.getElementById('page-fbl').classList.toggle('active',t==='fbl');
+  document.getElementById('page-pcf').classList.toggle('active',t==='pcf');
+  window.scrollTo(0,0);
+}
+
+function fblTitEff(p,m){return m<=0?0:m<=gm?p:Math.trunc(p/m*gm);}
+function fblTitMin3(m){return m<=gm?m:gm;}
+function fblPanEff(p,m,titMin3){
+  var p2=m<=gm?p:Math.trunc(p/m*gm);
+  var m3=m<=gm?m:gm;
+  var X=gm-titMin3;
+  if(m3===0) return 0;
+  if(m3<X) return p2;
+  return Math.floor(p2/m3*X);
+}
+function effClass(v){return v>0?'eff-pos':v<0?'eff-neg':'eff-zero';}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+
+function buildFBLRows(sqIdx){
+  var s=sq[sqIdx];
+  var id='sq'+(sqIdx+1);
+  ['tit','pan'].forEach(function(sec){
+    var container=document.getElementById(id+'-'+sec+'-rows');
+    container.innerHTML=s[sec].map(function(pl,i){
+      var isPan=sec==='pan';
+      var eff=isPan?fblPanEff(pl.p,pl.m,fblTitMin3(s.tit[i]?s.tit[i].m||0:0)):fblTitEff(pl.p,pl.m);
+      return '<div class="player-card'+(isPan?' panchina':'')+'">'+
+        '<input class="player-inp" type="text" value="'+esc(pl.n)+'" placeholder="Giocatore '+(i+1)+'" onchange="sq['+sqIdx+'].'+sec+'['+i+'].n=this.value;saveData()">'+
+        '<input class="num-inp" type="number" inputmode="numeric" value="'+(pl.p||'')+'" placeholder="0" onchange="sq['+sqIdx+'].'+sec+'['+i+'].p=parseFloat(this.value)||0;calcFBL()">'+
+        '<input class="num-inp" type="number" inputmode="numeric" value="'+(pl.m||'')+'" placeholder="0" onchange="sq['+sqIdx+'].'+sec+'['+i+'].m=parseFloat(this.value)||0;calcFBL()">'+
+        '<div class="eff-display '+effClass(eff)+'">'+eff+'</div>'+
+        '</div>';
+    }).join('');
+  });
+}
+
+function calcFBL(){
+  gm=parseFloat(document.getElementById('global-min').value)||40;
+  [0,1].forEach(function(si){
+    buildFBLRows(si);
+    var s=sq[si];
+    var tot=0;
+    s.tit.forEach(function(pl){tot+=fblTitEff(pl.p,pl.m);});
+    s.pan.forEach(function(pl,i){tot+=fblPanEff(pl.p,pl.m,fblTitMin3(s.tit[i]?s.tit[i].m||0:0));});
+    document.getElementById('sq'+(si+1)+'-tot').textContent=tot;
+    document.getElementById('sq'+(si+1)+'-fin').textContent=tot+5;
+  });
+  var n1=document.getElementById('sq1-name').value||'Squadra 1';
+  var n2=document.getElementById('sq2-name').value||'Squadra 2';
+  var v1=parseInt(document.getElementById('sq1-fin').textContent)||0;
+  var v2=parseInt(document.getElementById('sq2-fin').textContent)||0;
+  document.getElementById('bn-n1').textContent=n1.toUpperCase();
+  document.getElementById('bn-n2').textContent=n2.toUpperCase();
+  document.getElementById('bn-v1').textContent=v1;
+  document.getElementById('bn-v2').textContent=v2;
+  document.getElementById('bn-w1').innerHTML=v1>v2?'<div class="winner-tag">VINCE</div>':'';
+  document.getElementById('bn-w2').innerHTML=v2>v1?'<div class="winner-tag">VINCE</div>':'';
+  saveData();
+}
+
+function pcfTitEff(p,m){return m<=0?(p||0):m>gm?Math.floor(p/m*gm):p;}
+function pcfPanEff(p,m,titM){var av=Math.max(0,gm-(titM||0));return m<=0?0:m>av?Math.floor(p/m*av):p;}
+
+function getBaseAvail(posKey,titMins,panMins){
+  var single={PM:0,G:1,AP:2,AG:3,C:4};
+  if(posKey in single){
+    var i=single[posKey];
+    return Math.max(0,gm-(Math.min(gm,titMins[i]||0)+Math.min(gm,panMins[i]||0)));
+  }
+  var combos={'P/G':[0,1],'PM/G':[0,1],'G/AP':[1,2],'AP/AG':[2,3],'AG/C':[3,4]};
+  if(posKey in combos){
+    var ab=combos[posKey];
+    var keys=Object.keys(single);
+    return getBaseAvail(keys[ab[0]],titMins,panMins)+getBaseAvail(keys[ab[1]],titMins,panMins);
+  }
+  return 0;
+}
+
+function tribMatchesRow(tribRole,rowKey){
+  var map={
+    'PM':['PM/G','G','PM'],'G':['PM/G','G/AP','G'],'AP':['G/AP','AP/AG','AP'],
+    'AG':['AP/AG','AG/C','AG'],'C':['AG/C','C',''],
+    'P/G':['PM/G','G',''],'PM/G':['PM/G','G',''],
+    'G/AP':['G/AP','AP/AG','AP'],'AP/AG':['AP/AG','AG/C','AG'],'AG/C':['AG/C','C','']
+  };
+  return (map[rowKey]||[]).indexOf(tribRole)>=0;
+}
+
+function calcTribResults(titMins,panMins,tribs){
+  var fCol={};
+  POS_KEYS.forEach(function(k){fCol[k]=getBaseAvail(k,titMins,panMins);});
+  var cols=[fCol];
+  var cur=Object.assign({},fCol);
+  tribs.forEach(function(tr){
+    var next=Object.assign({},cur);
+    POS_KEYS.forEach(function(k){if(tribMatchesRow(tr.role,k)) next[k]=Math.max(0,cur[k]-tr.m);});
+    cols.push(next);cur=next;
+  });
+  return tribs.map(function(tr,i){
+    var avail=cols[i][tr.role]||0;
+    var eff=tr.m>0?(tr.m>avail?Math.floor(tr.p/tr.m*avail):tr.p):0;
+    return {avail:avail,eff:eff};
+  });
+}
+
+function buildPCFTit(){
+  document.getElementById('pcf-tit-rows').innerHTML=pcf.tit.map(function(pl,i){
+    var eff=pcfTitEff(pl.p,pl.m);
+    return '<div class="pcf-player-card">'+
+      '<div class="pcf-row1">'+
+        '<input class="player-inp" type="text" value="'+esc(pl.n)+'" placeholder="Titolare '+(i+1)+'" onchange="pcf.tit['+i+'].n=this.value;saveData()">'+
+        '<div class="pcf-eff-badge '+effClass(eff)+'">'+eff+'</div>'+
+      '</div>'+
+      '<div class="pcf-row2">'+
+        '<div><div class="inp-label">MIN</div><input class="num-inp-sm" type="number" inputmode="numeric" value="'+(pl.m||'')+'" placeholder="0" onchange="pcf.tit['+i+'].m=parseFloat(this.value)||0;calcPCF()"></div>'+
+        '<div><div class="inp-label">PTI</div><input class="num-inp-sm" type="number" inputmode="numeric" value="'+(pl.p||'')+'" placeholder="0" onchange="pcf.tit['+i+'].p=parseFloat(this.value)||0;calcPCF()"></div>'+
+        '<div></div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function buildPCFPan(titMins){
+  document.getElementById('pcf-pan-rows').innerHTML=pcf.pan.map(function(pl,i){
+    var eff=pcfPanEff(pl.p,pl.m,titMins[i]||0);
+    var av=Math.max(0,gm-(titMins[i]||0));
+    return '<div class="pcf-player-card panchina">'+
+      '<div class="pcf-row1">'+
+        '<input class="player-inp" type="text" value="'+esc(pl.n)+'" placeholder="Panchina '+(i+1)+'" onchange="pcf.pan['+i+'].n=this.value;saveData()">'+
+        '<div class="pcf-eff-badge '+effClass(eff)+'">'+eff+'</div>'+
+      '</div>'+
+      '<div class="pcf-row2">'+
+        '<div><div class="inp-label">MIN</div><input class="num-inp-sm" type="number" inputmode="numeric" value="'+(pl.m||'')+'" placeholder="0" onchange="pcf.pan['+i+'].m=parseFloat(this.value)||0;calcPCF()"></div>'+
+        '<div><div class="inp-label">PTI</div><input class="num-inp-sm" type="number" inputmode="numeric" value="'+(pl.p||'')+'" placeholder="0" onchange="pcf.pan['+i+'].p=parseFloat(this.value)||0;calcPCF()"></div>'+
+        '<div><div class="inp-label">DISP</div><div class="avail-badge"><div class="avail-val">'+av+'</div></div></div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function buildPCFTrib(tribResults){
+  document.getElementById('pcf-trib-rows').innerHTML=pcf.trib.map(function(tr,i){
+    var res=tribResults[i]||{avail:0,eff:0};
+    return '<div class="tribuna-card">'+
+      '<div class="trib-row1">'+
+        '<select class="role-sel" onchange="pcf.trib['+i+'].role=this.value;calcPCF()">'+
+          ROLES.map(function(r){return '<option value="'+r+'"'+(r===tr.role?' selected':'')+'>'+r+'</option>';}).join('')+
+        '</select>'+
+        '<input class="player-inp" type="text" value="'+esc(tr.n)+'" placeholder="Nome giocatore" onchange="pcf.trib['+i+'].n=this.value;saveData()" style="border-bottom:1px solid rgba(255,107,53,0.3)">'+
+        '<div class="pcf-eff-badge '+effClass(res.eff)+'" style="min-width:40px;text-align:right">'+res.eff+'</div>'+
+      '</div>'+
+      '<div class="trib-row2">'+
+        '<div><div class="inp-label">MIN</div><input class="num-inp-sm" type="number" inputmode="numeric" value="'+(tr.m||'')+'" placeholder="0" onchange="pcf.trib['+i+'].m=parseFloat(this.value)||0;calcPCF()"></div>'+
+        '<div><div class="inp-label">PTI</div><input class="num-inp-sm" type="number" inputmode="numeric" value="'+(tr.p||'')+'" placeholder="0" onchange="pcf.trib['+i+'].p=parseFloat(this.value)||0;calcPCF()"></div>'+
+        '<div><div class="inp-label">DISP</div><div class="avail-badge"><div class="avail-val">'+res.avail+'</div></div></div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function calcPCF(){
+  gm=parseFloat(document.getElementById('global-min').value)||40;
+  var titMins=pcf.tit.map(function(p){return p.m||0;});
+  var panMins=pcf.pan.map(function(p){return p.m||0;});
+  buildPCFTit();
+  buildPCFPan(titMins);
+  var tribRes=calcTribResults(titMins,panMins,pcf.trib);
+  buildPCFTrib(tribRes);
+  var titTot=0,panTot=0;
+  pcf.tit.forEach(function(pl){titTot+=pcfTitEff(pl.p,pl.m);});
+  pcf.pan.forEach(function(pl,i){panTot+=pcfPanEff(pl.p,pl.m,titMins[i]||0);});
+  panTot+=tribRes.reduce(function(s,r){return s+r.eff;},0);
+  var grand=titTot+panTot;
+  document.getElementById('pcf-tit-sum').textContent=titTot;
+  document.getElementById('pcf-pan-sum').textContent=panTot;
+  document.getElementById('pcf-grand').textContent=grand;
+  document.getElementById('pcf-casa').textContent=grand+3;
+  saveData();
+}
+
+loadData();
+calcFBL();
+calcPCF();
+</script>
+</body>
+</html>
