@@ -94,6 +94,16 @@ html,body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;m
 .confirm-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .confirm-yes{background:var(--negative);border:none;border-radius:12px;color:#fff;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;padding:14px;cursor:pointer;min-height:50px}
 .confirm-no{background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Syne',sans-serif;font-size:15px;font-weight:600;padding:14px;cursor:pointer;min-height:50px}
+.sq1-card{background:rgba(255,107,53,0.07)!important;border-color:rgba(255,107,53,0.15)!important}
+.sq1-card.panchina{background:rgba(255,107,53,0.04)!important;border-color:rgba(255,107,53,0.08)!important}
+.sq2-card{background:rgba(59,130,246,0.07)!important;border-color:rgba(59,130,246,0.15)!important}
+.sq2-card.panchina{background:rgba(59,130,246,0.04)!important;border-color:rgba(59,130,246,0.08)!important}
+.p1-card{background:rgba(168,85,247,0.07)!important;border-color:rgba(168,85,247,0.15)!important}
+.p1-card.panchina{background:rgba(168,85,247,0.04)!important;border-color:rgba(168,85,247,0.08)!important}
+.p1-card.tribuna-card{border-color:rgba(168,85,247,0.2)!important}
+.p2-card{background:rgba(16,185,129,0.07)!important;border-color:rgba(16,185,129,0.15)!important}
+.p2-card.panchina{background:rgba(16,185,129,0.04)!important;border-color:rgba(16,185,129,0.08)!important}
+.p2-card.tribuna-card{border-color:rgba(16,185,129,0.2)!important}
 ::-webkit-scrollbar{display:none}
 </style>
 </head>
@@ -405,9 +415,10 @@ function buildFBLRows(si){
     c.innerHTML=s[sec].map(function(pl,i){
       var isPan=sec==='pan';
       var eff=isPan?fblPanEff(pl.p,pl.m,fblTitMin3(s.tit[i]?s.tit[i].m||0:0)):fblTitEff(pl.p,pl.m);
-      return '<div class="player-card'+(isPan?' panchina':'')+'">'+
+      var sqClass=si===0?' sq1-card':' sq2-card';
+      return '<div class="player-card'+(isPan?' panchina':'')+sqClass+'">'+
         '<input class="player-inp" type="text" value="'+esc(pl.n)+'" placeholder="Giocatore '+(i+1)+'" onchange="sq['+si+'].'+sec+'['+i+'].n=this.value;saveData()">'+
-        '<input class="num-inp" type="number" inputmode="decimal" value="'+(pl.p!==0?pl.p:'')+'" placeholder="0" onchange="sq['+si+'].'+sec+'['+i+'].p=parseFloat(this.value)||0;calcFBL()">'+
+        '<input class="num-inp" type="number" inputmode="text" pattern="-?[0-9]*" value="'+(pl.p!==0?pl.p:'')+'" placeholder="0" onchange="sq['+si+'].'+sec+'['+i+'].p=parseFloat(this.value)||0;calcFBL()">'+
         '<input class="num-inp" type="number" inputmode="numeric" min="0" value="'+(pl.m||'')+'" placeholder="0" onchange="sq['+si+'].'+sec+'['+i+'].m=parseFloat(this.value)||0;calcFBL()">'+
         '<div class="eff-display '+effClass(eff)+'">'+eff+'</div></div>';
     }).join('');
@@ -476,9 +487,9 @@ function buildPCFTeam(ti){
   // titolari
   document.getElementById(pfx+'-tit-rows').innerHTML=team.tit.map(function(pl,i){
     var eff=pcfTitEff(pl.p,pl.m);
-    return '<div class="pcf-player-card"><div class="pcf-top-row">'+
+    return '<div class="pcf-player-card '+(ti===0?'p1-card':'p2-card')+'"><div class="pcf-top-row">'+
       '<input class="player-inp" type="text" value="'+esc(pl.n)+'" placeholder="Titolare '+(i+1)+'" onchange="pcfTeams['+ti+'].tit['+i+'].n=this.value;saveData()">'+
-      '<input class="num-inp" type="number" inputmode="decimal" value="'+(pl.p!==0?pl.p:'')+'" placeholder="0" onchange="pcfTeams['+ti+'].tit['+i+'].p=parseFloat(this.value)||0;calcPCF()">'+
+      '<input class="num-inp" type="number" inputmode="text" pattern="-?[0-9]*" value="'+(pl.p!==0?pl.p:'')+'" placeholder="0" onchange="pcfTeams['+ti+'].tit['+i+'].p=parseFloat(this.value)||0;calcPCF()">'+
       '<input class="num-inp" type="number" inputmode="numeric" min="0" value="'+(pl.m||'')+'" placeholder="0" onchange="pcfTeams['+ti+'].tit['+i+'].m=parseFloat(this.value)||0;calcPCF()">'+
       '<div class="eff-display '+effClass(eff)+'">'+eff+'</div></div></div>';
   }).join('');
@@ -487,9 +498,9 @@ function buildPCFTeam(ti){
   document.getElementById(pfx+'-pan-rows').innerHTML=team.pan.map(function(pl,i){
     var eff=pcfPanEff(pl.p,pl.m,titMins[i]||0);
     var av=Math.max(0,gm-(titMins[i]||0));
-    return '<div class="pcf-player-card panchina"><div class="pcf-top-row">'+
+    return '<div class="pcf-player-card panchina '+(ti===0?'p1-card':'p2-card')+'"><div class="pcf-top-row">'+
       '<input class="player-inp" type="text" value="'+esc(pl.n)+'" placeholder="Panchina '+(i+1)+'" onchange="pcfTeams['+ti+'].pan['+i+'].n=this.value;saveData()">'+
-      '<input class="num-inp" type="number" inputmode="decimal" value="'+(pl.p!==0?pl.p:'')+'" placeholder="0" onchange="pcfTeams['+ti+'].pan['+i+'].p=parseFloat(this.value)||0;calcPCF()">'+
+      '<input class="num-inp" type="number" inputmode="text" pattern="-?[0-9]*" value="'+(pl.p!==0?pl.p:'')+'" placeholder="0" onchange="pcfTeams['+ti+'].pan['+i+'].p=parseFloat(this.value)||0;calcPCF()">'+
       '<input class="num-inp" type="number" inputmode="numeric" min="0" value="'+(pl.m||'')+'" placeholder="0" onchange="pcfTeams['+ti+'].pan['+i+'].m=parseFloat(this.value)||0;calcPCF()">'+
       '<div class="eff-display '+effClass(eff)+'">'+eff+'</div></div>'+
       '<div class="avail-note">disp: '+av+' min</div></div>';
@@ -499,13 +510,13 @@ function buildPCFTeam(ti){
   var tribRes=calcTribResults(titMins,panMins,team.trib);
   document.getElementById(pfx+'-trib-rows').innerHTML=team.trib.map(function(tr,i){
     var res=tribRes[i]||{avail:0,eff:0};
-    return '<div class="tribuna-card" style="border:1px solid '+tb+'">'+
+    return '<div class="tribuna-card '+(ti===0?'p1-card':'p2-card')+'" style="border:1px solid '+tb+'">'+
       '<div class="pcf-top-row" style="grid-template-columns:auto 1fr 60px 60px 52px">'+
         '<select class="role-sel" style="color:'+tc+';border-color:'+tb+'" onchange="pcfTeams['+ti+'].trib['+i+'].role=this.value;calcPCF()">'+
           ROLES.map(function(r){return '<option value="'+r+'"'+(r===tr.role?' selected':'')+'>'+r+'</option>';}).join('')+
         '</select>'+
         '<input class="player-inp" type="text" value="'+esc(tr.n)+'" placeholder="Nome" onchange="pcfTeams['+ti+'].trib['+i+'].n=this.value;saveData()" style="border-bottom-color:'+tb+'">'+
-        '<input class="num-inp" type="number" inputmode="decimal" value="'+(tr.p!==0?tr.p:'')+'" placeholder="0" onchange="pcfTeams['+ti+'].trib['+i+'].p=parseFloat(this.value)||0;calcPCF()">'+
+        '<input class="num-inp" type="number" inputmode="text" pattern="-?[0-9]*" value="'+(tr.p!==0?tr.p:'')+'" placeholder="0" onchange="pcfTeams['+ti+'].trib['+i+'].p=parseFloat(this.value)||0;calcPCF()">'+
         '<input class="num-inp" type="number" inputmode="numeric" min="0" value="'+(tr.m||'')+'" placeholder="0" onchange="pcfTeams['+ti+'].trib['+i+'].m=parseFloat(this.value)||0;calcPCF()">'+
         '<div class="eff-display '+effClass(res.eff)+'">'+res.eff+'</div>'+
       '</div>'+
